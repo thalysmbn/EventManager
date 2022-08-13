@@ -2,7 +2,6 @@
 using Discord.WebSocket;
 using EventManager.Database;
 using EventManager.Extensions;
-using EventManager.Helpers;
 using EventManager.Models;
 using EventManager.Struct;
 using Humanizer;
@@ -19,20 +18,25 @@ namespace EventManager.Handler
         private readonly DiscordSocketClient _discordSocketClient;
         private readonly IMongoRepository<LicenseModel> _licenseModel;
         private readonly IMongoRepository<EventModel> _eventRepository;
+        private readonly IMongoRepository<RegionModel> _regionRepository;
 
         public ButtonExecutedHandler(DiscordSocketClient discordSocketClient,
             IMongoRepository<LicenseModel> eventModel,
-            IMongoRepository<EventModel> managerModel)
+            IMongoRepository<EventModel> managerModel,
+            IMongoRepository<RegionModel> regionRepository)
         {
             _discordSocketClient = discordSocketClient;
             _licenseModel = eventModel;
             _eventRepository = managerModel;
+            _regionRepository = regionRepository;
         }
+
         public async Task Executed(SocketMessageComponent component)
         {
             try
             {
-                if (await _licenseModel.CheckLicense(component))
+                var language = await _regionRepository.GetOrAddLanguageByRegion(component.GuildId.Value);
+                if (await _licenseModel.CheckLicense(language, component))
                 {
                     var eventModel = await _eventRepository.FindOneAsync(x => x.DiscordId == component.GuildId);
                     if (eventModel == null) return;
@@ -57,7 +61,7 @@ namespace EventManager.Handler
                             {
                                 await component.UpdateAsync(x =>
                                 {
-                                    x.Components = new ComponentBuilder().CreatePublicEventComponentBuilder(eventDataModel);
+                                    x.Components = new ComponentBuilder().CreatePublicEventComponentBuilder(language, eventDataModel);
                                 });
                             }).ContinueWith(async x => {
                                 var queueVoicechannel = guild.GetVoiceChannel(eventModel.QueueVoiceId);
@@ -102,52 +106,56 @@ namespace EventManager.Handler
                                         eventDataModel.IsStopped = true;
                                         eventDataModel.EndedAt = DateTime.Now;
 
-                                        var amount = eventDataModel.Amount;
-
-                                        var eventTax = ((double)eventDataModel.EventTax / 100) * amount;
-                                        var buyerTax = ((double)eventDataModel.BuyerTax / 100) * amount;
-
-                                        var total = (amount - (eventTax + buyerTax));
 
                                         var users = eventDataModel.Users;
-                                        var peakTime = users.Max(x => x.TimeActivity);
-
-                                        var distribution = total / users.Count;
-
-                                        var distributionUsers = new List<UserEventResult>();
-
-                                        var usersByTimeActivity = users.OrderByDescending(x => x.TimeActivity);
-                                        var usersTotalToPay = (double)0;
-                                        foreach (var user in usersByTimeActivity)
+                                        if (users.Count > 0)
                                         {
-                                            var userPecentage = (int)Math.Round((double)(100 * user.TimeActivity) / peakTime);
-                                            var userTotalAmount = ((double)userPecentage / 100) * distribution;
-                                            usersTotalToPay += userTotalAmount;
-                                            distributionUsers.Add(new UserEventResult
-                                            {
-                                                UserId = user.UserId,
-                                                TimeActivity = user.TimeActivity,
-                                                Percentage = userPecentage,
-                                                Amount = (long)userTotalAmount,
-                                            });
-                                        }
-                                        var rest = total - usersTotalToPay;
-                                        var restPrePaid = rest / users.Count;
+                                            var amount = eventDataModel.Amount;
 
-                                        foreach (var user in distributionUsers)
-                                        {
-                                            var userData = eventModel.Users.SingleOrDefault(x => x.UserId == user.UserId);
-                                            if (userData == null)
+                                            var eventTax = ((double)eventDataModel.EventTax / 100) * amount;
+                                            var buyerTax = ((double)eventDataModel.BuyerTax / 100) * amount;
+
+                                            var total = (amount - (eventTax + buyerTax));
+
+                                            var peakTime = users.Max(x => x.TimeActivity);
+
+                                            var distribution = total / users.Count;
+
+                                            var distributionUsers = new List<UserEventResult>();
+
+                                            var usersByTimeActivity = users.OrderByDescending(x => x.TimeActivity);
+                                            var usersTotalToPay = (double)0;
+                                            foreach (var user in usersByTimeActivity)
                                             {
-                                                eventModel.Users.Add(new GuildUser
+                                                var userPecentage = (int)Math.Round((double)(100 * user.TimeActivity) / peakTime);
+                                                var userTotalAmount = ((double)userPecentage / 100) * distribution;
+                                                usersTotalToPay += userTotalAmount;
+                                                distributionUsers.Add(new UserEventResult
                                                 {
                                                     UserId = user.UserId,
-                                                    Amount = user.Amount + (long)restPrePaid
+                                                    TimeActivity = user.TimeActivity,
+                                                    Percentage = userPecentage,
+                                                    Amount = (long)userTotalAmount,
                                                 });
                                             }
-                                            else
+                                            var rest = total - usersTotalToPay;
+                                            var restPrePaid = rest / users.Count;
+
+                                            foreach (var user in distributionUsers)
                                             {
-                                                userData.Amount += user.Amount + (long)restPrePaid;
+                                                var userData = eventModel.Users.SingleOrDefault(x => x.UserId == user.UserId);
+                                                if (userData == null)
+                                                {
+                                                    eventModel.Users.Add(new GuildUser
+                                                    {
+                                                        UserId = user.UserId,
+                                                        Amount = user.Amount + (long)restPrePaid
+                                                    });
+                                                }
+                                                else
+                                                {
+                                                    userData.Amount += user.Amount + (long)restPrePaid;
+                                                }
                                             }
                                         }
                                         break;
@@ -156,11 +164,11 @@ namespace EventManager.Handler
                                         break;
 
                                 }
-                                embeds.AddFirst(new EmbedBuilder().CreateEventBuild(eventDataModel));
+                                embeds.AddFirst(new EmbedBuilder().CreateEventBuild(language, eventDataModel));
                                 await component.UpdateAsync(x =>
                                 {
                                     x.Embeds = embeds.ToArray();
-                                    x.Components = new ComponentBuilder().CreateEventComponentBuilder(eventDataModel);
+                                    x.Components = new ComponentBuilder().CreateEventComponentBuilder(language, eventDataModel);
                                 });
                             }).ContinueWith(async x =>
                             {
@@ -168,14 +176,14 @@ namespace EventManager.Handler
                                 if (eventChannel == null) return;
                                 if (eventDataModel.MessageId == 0)
                                 {
-                                    var messageEvent = await eventChannel.SendMessageAsync(" ", embed: new EmbedBuilder().CreatePublicEventBuild(eventDataModel), components: new ComponentBuilder().CreatePublicEventComponentBuilder(eventDataModel));
+                                    var messageEvent = await eventChannel.SendMessageAsync(" ", embed: new EmbedBuilder().CreatePublicEventBuild(language, eventDataModel), components: new ComponentBuilder().CreatePublicEventComponentBuilder(language, eventDataModel));
                                     eventDataModel.MessageId = messageEvent.Id;
                                 }
                                 else
                                     await eventChannel.ModifyMessageAsync(eventDataModel.MessageId, x =>
                                     {
-                                        x.Embed = new EmbedBuilder().CreatePublicEventBuild(eventDataModel);
-                                        x.Components = new ComponentBuilder().CreatePublicEventComponentBuilder(eventDataModel);
+                                        x.Embed = new EmbedBuilder().CreatePublicEventBuild(language, eventDataModel);
+                                        x.Components = new ComponentBuilder().CreatePublicEventComponentBuilder(language, eventDataModel);
                                     });
                                 await _eventRepository.ReplaceOneAsync(eventModel);
                             });
@@ -184,19 +192,19 @@ namespace EventManager.Handler
                             if (component.Channel.Id != eventModel.ManagerChannelId) return;
                             if (eventDataModel.IsStopped) break;
                             await component.RespondWithModalAsync(new ModalBuilder()
-                                .WithTitle("Event Amount")
+                                .WithTitle(language.EventBalance)
                                 .WithCustomId($"amount#{component.Message.Id}#{value}")
-                                .AddTextInput("Balance", "amount", placeholder: "Amount", value: eventDataModel.Amount.ToString())
+                                .AddTextInput(language.Balance, "amount", placeholder: language.AmountPlaceHolder, value: eventDataModel.Amount.ToString())
                                 .Build());
                             break;
                         case "eventTax":
                             if (component.Channel.Id != eventModel.ManagerChannelId) return;
                             if (eventDataModel.IsStopped) break;
                             await component.RespondWithModalAsync(new ModalBuilder()
-                                .WithTitle("Event Tax")
+                                .WithTitle(language.EventTax)
                                 .WithCustomId($"eventTax#{component.Message.Id}#{value}")
-                                .AddTextInput("Event Tax", "eventTax", placeholder: "Percentage", value: eventDataModel.EventTax.ToString())
-                                .AddTextInput("Buyer Tax", "buyerTax", placeholder: "Percentage", value: eventDataModel.BuyerTax.ToString())
+                                .AddTextInput(language.EventTax, "eventTax", placeholder: language.PercentagePlaceHolder, value: eventDataModel.EventTax.ToString())
+                                .AddTextInput(language.BuyerTax, "buyerTax", placeholder: language.PercentagePlaceHolder, value: eventDataModel.BuyerTax.ToString())
                                 .Build());
                             break;
 
@@ -213,13 +221,13 @@ namespace EventManager.Handler
                             var users = eventDataModel.Users;
                             var peakTime = users.Max(x => x.TimeActivity);
 
-                            embed.AddField("Amount:", string.Format("{0:#,##0}", eventDataModel.Amount));
-                            embed.AddField("Total:", string.Format("{0:#,##0}", total));
-                            embed.AddField("Users:", eventDataModel.Users.Count);
-                            embed.AddField("Peak Time:", TimeSpan.FromSeconds(peakTime).Humanize(3));
-                            embed.AddField("Total Time:", TimeSpan.FromSeconds(eventDataModel.TotalEventTime).Humanize(3));
-                            embed.AddField("Event Tax:", string.Format("{0:#,##0}", eventTax), true);
-                            embed.AddField("Buyer Tax:", string.Format("{0:#,##0}", buyerTax), true);
+                            embed.AddField($"{language.Amount}:", string.Format("{0:#,##0}", eventDataModel.Amount));
+                            embed.AddField($"{language.Total}:", string.Format("{0:#,##0}", total));
+                            embed.AddField($"{language.Users}:", eventDataModel.Users.Count);
+                            embed.AddField($"{language.PeakTime}:", TimeSpan.FromSeconds(peakTime).Humanize(3));
+                            embed.AddField($"{language.TotalTime}:", TimeSpan.FromSeconds(eventDataModel.TotalEventTime).Humanize(3));
+                            embed.AddField($"{language.EventTax}:", string.Format("{0:#,##0}", eventTax), true);
+                            embed.AddField($"{language.BuyerTax}:", string.Format("{0:#,##0}", buyerTax), true);
 
                             var stringBuilder = new StringBuilder();
                             stringBuilder.AppendLine("Details:");

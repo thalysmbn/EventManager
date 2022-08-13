@@ -49,9 +49,6 @@ namespace EventManager.Handler
 
             }
             await _eventRepository.ReplaceOneAsync(eventModel);
-            Console.WriteLine($"VoiceStateUpdate: {user} - {before.VoiceChannel?.Name ?? "null"} -> {after.VoiceChannel?.Name ?? "null"}");
-
-            //await _eventRepository.ReplaceOneAsync(eventModel);
         }
 
         private SocketGuild GetGuild(SocketVoiceState x, SocketVoiceState y)

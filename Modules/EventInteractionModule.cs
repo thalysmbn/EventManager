@@ -17,12 +17,15 @@ namespace EventManager.Modules
     {
         private readonly IMongoRepository<LicenseModel> _licenseModel;
         private readonly IMongoRepository<EventModel> _eventModel;
+        private readonly IMongoRepository<RegionModel> _regionRepository;
 
         public EventInteractionModule(IMongoRepository<LicenseModel> eventModel,
-            IMongoRepository<EventModel> managerModel)
+            IMongoRepository<EventModel> managerModel,
+            IMongoRepository<RegionModel> regionRepository)
         {
             _licenseModel = eventModel;
             _eventModel = managerModel;
+            _regionRepository = regionRepository;
         }
 
         [SlashCommand("build", "Build Event System")]
@@ -103,7 +106,8 @@ namespace EventManager.Modules
         [RequireRole("Manager")]
         public async Task Create(int eventTax, int buyerTax)
         {
-            if (await _licenseModel.CheckLicense(Context))
+            var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
+            if (await _licenseModel.CheckLicense(language, Context))
             {
                 var guild = Context.Guild;
                 if (guild == null) return;
@@ -149,8 +153,8 @@ namespace EventManager.Modules
                 eventModel.Events.Add(eventDataModel);
 
                 await Context.Interaction.RespondAsync($"ID: {eventDataModel.Id}",
-                    embeds: new[] { new EmbedBuilder().CreateEventBuild(eventDataModel) },
-                    components: new ComponentBuilder().CreateEventComponentBuilder(eventDataModel));
+                    embeds: new[] { new EmbedBuilder().CreateEventBuild(language, eventDataModel) },
+                    components: new ComponentBuilder().CreateEventComponentBuilder(language, eventDataModel));
                 
                 await _eventModel.ReplaceOneAsync(eventModel);
             }

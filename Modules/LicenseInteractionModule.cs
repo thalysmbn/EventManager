@@ -1,7 +1,9 @@
 ﻿using Discord;
 using Discord.Interactions;
 using EventManager.Database;
+using EventManager.Extensions;
 using EventManager.Models;
+using EventManager.Resources;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -15,20 +17,24 @@ namespace EventManager.Modules
     {
         private readonly IMongoRepository<LicenseModel> _licenseModel;
         private readonly IMongoRepository<EventModel> _managerModel;
+        private readonly IMongoRepository<RegionModel> _regionRepository;
 
         public LicenseInteractionModule(IMongoRepository<LicenseModel> licenseModel,
-            IMongoRepository<EventModel> managerModel)
+            IMongoRepository<EventModel> managerModel,
+            IMongoRepository<RegionModel> regionRepository)
         {
             _licenseModel = licenseModel;
             _managerModel = managerModel;
+            _regionRepository = regionRepository;
         }
 
         [SlashCommand("install", "Install license")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Install()
         {
+            var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
             var discord = await _licenseModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
-            if (discord != null) await RespondAsync($"License has already been installed");
+            if (discord != null) await RespondAsync(language.LicenseHasAlreadyBeenInstalled);
             if (discord == null)
             {
                 discord = new LicenseModel
@@ -39,7 +45,7 @@ namespace EventManager.Modules
                 };
                 await Context.Guild.CreateRoleAsync("Manager", color: Color.Teal, isMentionable: false);
                 await _licenseModel.InsertOneAsync(discord);
-                await RespondAsync($"**License:** {discord.Id}");
+                await RespondAsync($"**{language.License}:** {discord.Id}");
             }
         }
 
@@ -47,8 +53,9 @@ namespace EventManager.Modules
         [RequireRole("Manager")]
         public async Task License()
         {
+            var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
             var discord = await _licenseModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
-            if (discord != null) await RespondAsync($"**License:** {discord.Id}\n**Expire:** {discord.ExpireAt}");
+            if (discord != null) await RespondAsync($"**{Languages.Language["en"].License}:** {discord.Id}\n**{language.Expire}:** {discord.ExpireAt}");
             if (discord == null) await RespondAsync($"License not found.");
         }
     }

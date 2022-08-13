@@ -48,7 +48,6 @@ namespace EventManager.Services
             var eventModels = _eventRepository.AsQueryable().Where(x => x.Events.Any(x => !x.IsPaused && !x.IsStopped));
             foreach (var eventModel in eventModels)
             {
-                Console.WriteLine($"{eventModel.DiscordId}");
                 var guild = _discordSocketClient.GetGuild(eventModel.DiscordId);
                 if (guild == null) continue;
 

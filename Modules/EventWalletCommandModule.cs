@@ -16,18 +16,23 @@ namespace EventManager.Modules
     {
         private readonly IMongoRepository<LicenseModel> _licenseModel;
         private readonly IMongoRepository<EventModel> _eventModel;
+        private readonly IMongoRepository<RegionModel> _regionRepository;
 
         public EventWalletCommandModule(IMongoRepository<LicenseModel> eventModel,
-            IMongoRepository<EventModel> managerModel)
+            IMongoRepository<EventModel> managerModel,
+            IMongoRepository<RegionModel> regionRepository)
         {
             _licenseModel = eventModel;
             _eventModel = managerModel;
+            _regionRepository = regionRepository;
         }
 
         [Command("balance")]
+        [Alias("saldo")]
         public async Task Balance()
         {
-            if (await _licenseModel.CheckLicense(Context))
+            var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
+            if (await _licenseModel.CheckLicense(language, Context))
             {
                 var guild = Context.Guild;
                 if (guild == null) return;
@@ -40,11 +45,11 @@ namespace EventManager.Modules
                 var userBalance = eventModel.Users.FirstOrDefault(x => x.UserId == Context.User.Id);
                 if (userBalance == null)
                 {
-                    await Context.Message.ReplyAsync("Your account has no balance");
+                    await Context.Message.ReplyAsync($"{language.AccountWithoutBalance}");
                 }
                 else
                 {
-                    await Context.Message.ReplyAsync($"Balance: **{string.Format("{0:#,##0}", userBalance.Amount)}**");
+                    await Context.Message.ReplyAsync($"{language.Balance}: **{string.Format("{0:#,##0}", userBalance.Amount)}**");
                 }
             }
         }

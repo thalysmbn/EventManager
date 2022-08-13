@@ -16,19 +16,23 @@ namespace EventManager.Handler
         private readonly DiscordSocketClient _discordSocketClient;
         private readonly IMongoRepository<LicenseModel> _licenseModel;
         private readonly IMongoRepository<EventModel> _eventModel;
+        private readonly IMongoRepository<RegionModel> _regionRepository;
 
         public ModalSubmittedHandler(DiscordSocketClient discordSocketClient,
             IMongoRepository<LicenseModel> eventModel,
-            IMongoRepository<EventModel> managerModel)
+            IMongoRepository<EventModel> managerModel,
+            IMongoRepository<RegionModel> regionRepository)
         {
             _discordSocketClient = discordSocketClient;
             _licenseModel = eventModel;
             _eventModel = managerModel;
+            _regionRepository = regionRepository;
         }
 
         public async Task Executed(SocketModal modal)
         {
-            if (await _licenseModel.CheckLicense(modal))
+            var language = await _regionRepository.GetOrAddLanguageByRegion(modal.GuildId.Value);
+            if (await _licenseModel.CheckLicense(language, modal))
             {
                 var eventModel = await _eventModel.FindOneAsync(x => x.DiscordId == modal.GuildId);
                 if (eventModel == null) return;
@@ -71,13 +75,13 @@ namespace EventManager.Handler
                         break;
                 }
 
-                await modal.UpdateAsync(x => x.Embed = new EmbedBuilder().CreateEventBuild(eventDataModel));
+                await modal.UpdateAsync(x => x.Embed = new EmbedBuilder().CreateEventBuild(language, eventDataModel));
 
                 if (eventDataModel.MessageId != 0)
                     await eventChannel.ModifyMessageAsync(eventDataModel.MessageId, x =>
                     {
-                        x.Embed = new EmbedBuilder().CreatePublicEventBuild(eventDataModel);
-                        x.Components = new ComponentBuilder().CreatePublicEventComponentBuilder(eventDataModel);
+                        x.Embed = new EmbedBuilder().CreatePublicEventBuild(language, eventDataModel);
+                        x.Components = new ComponentBuilder().CreatePublicEventComponentBuilder(language, eventDataModel);
                     });
 
                 await _eventModel.ReplaceOneAsync(eventModel);
