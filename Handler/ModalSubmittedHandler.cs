@@ -31,6 +31,14 @@ namespace EventManager.Handler
 
         public async Task Executed(SocketModal modal)
         {
+            if (modal.GuildId == null) return;
+            var guild = _discordSocketClient.GetGuild(modal.GuildId.Value);
+
+            var _user = guild.GetUser(modal.User.Id);
+            if (_user == null) return;
+
+            if (!_user.Roles.Any(x => x.Name == "Manager")) return;
+
             var language = await _regionRepository.GetOrAddLanguageByRegion(modal.GuildId.Value);
             if (await _licenseModel.CheckLicense(language, modal))
             {
@@ -54,8 +62,6 @@ namespace EventManager.Handler
                 var component = components.FirstOrDefault(x => x.CustomId == command);
 
                 if (component == null) return;
-                if (modal.GuildId == null) return;
-                var guild = _discordSocketClient.GetGuild(modal.GuildId.Value);
                 var channel = guild.GetVoiceChannel(eventDataModel.VoiceChannelId);
 
                 var eventChannel = _discordSocketClient.GetChannel(eventModel.EventChannelId) as IMessageChannel;

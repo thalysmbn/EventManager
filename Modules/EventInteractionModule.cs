@@ -29,10 +29,14 @@ namespace EventManager.Modules
         }
 
         [SlashCommand("build", "Build Event System")]
-        [RequireRole("Manager")]
         public async Task Build()
         {
             var guild = Context.Guild;
+            var _user = guild.GetUser(Context.User.Id);
+            if (_user == null) return;
+
+            if (!_user.Roles.Any(x => x.Name == "Manager")) return;
+
             var eventModel = await _eventModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
             if (eventModel == null)
             {
@@ -103,9 +107,13 @@ namespace EventManager.Modules
         }
 
         [SlashCommand("create", "Create Event")]
-        [RequireRole("Manager")]
         public async Task Create(int eventTax, int buyerTax)
         {
+            var _user = Context.Guild.GetUser(Context.User.Id);
+            if (_user == null) return;
+
+            if (!_user.Roles.Any(x => x.Name == "Manager")) return;
+
             var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
             if (await _licenseModel.CheckLicense(language, Context))
             {

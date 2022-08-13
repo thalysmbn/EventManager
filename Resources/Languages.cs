@@ -63,7 +63,8 @@ namespace EventManager.Resources
                     EventBalance = "Saldo do Evento",
                     Balance = "Saldo",
                     AmountPlaceHolder = "Qunaitdade",
-                    AccountWithoutBalance = "Sua conta não possui um registro de saldo"
+                    AccountWithoutBalance = "Sua conta não possui um registro de saldo",
+                    AccountAmountUpdated = "Saldo Atualizado"
                 }
             }
         };
@@ -94,5 +95,6 @@ namespace EventManager.Resources
         public string Balance { get; set; }
         public string AmountPlaceHolder { get; set; }
         public string AccountWithoutBalance { get; set; }
+        public string AccountAmountUpdated { get; set; }
     }
 }

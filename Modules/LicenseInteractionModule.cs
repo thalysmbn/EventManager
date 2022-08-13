@@ -29,7 +29,6 @@ namespace EventManager.Modules
         }
 
         [SlashCommand("install", "Install license")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Install()
         {
             var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
@@ -50,9 +49,13 @@ namespace EventManager.Modules
         }
 
         [SlashCommand("license", "Check license")]
-        [RequireRole("Manager")]
         public async Task License()
         {
+            var _user = Context.Guild.GetUser(Context.User.Id);
+            if (_user == null) return;
+
+            if (!_user.Roles.Any(x => x.Name == "Manager")) return;
+
             var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
             var discord = await _licenseModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
             if (discord != null) await RespondAsync($"**{Languages.Language["en"].License}:** {discord.Id}\n**{language.Expire}:** {discord.ExpireAt}");
