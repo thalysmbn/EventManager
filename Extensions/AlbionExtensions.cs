@@ -63,7 +63,7 @@ namespace EventManager.Extensions
             var model = await license.FindOneAsync(x => x.DiscordId == modal.GuildId);
             if (model == null)
             {
-                await modal.RespondAsync("Not found.");
+                await modal.RespondAsync("License Not found.");
                 return false;
             }
             if (!model.IsValid)
@@ -74,12 +74,28 @@ namespace EventManager.Extensions
             return true;
         }
 
+        public static async Task<bool> CheckLicense(this IMongoRepository<LicenseModel> license, SocketCommandContext context)
+        {
+            var model = await license.FindOneAsync(x => x.DiscordId == context.Guild.Id);
+            if (model == null)
+            {
+                await context.Channel.SendMessageAsync("License Not found.");
+                return false;
+            }
+            if (!model.IsValid)
+            {
+                await context.Channel.SendMessageAsync($"License expired: **{model.ExpireAt}**");
+                return false;
+            }
+            return true;
+        }
+
         public static async Task<bool> CheckLicense(this IMongoRepository<LicenseModel> license, SocketMessageComponent component)
         {
             var model = await license.FindOneAsync(x => x.DiscordId == component.GuildId);
             if (model == null)
             {
-                await component.RespondAsync("Not found.");
+                await component.RespondAsync("License Not found.");
                 return false;
             }
             if (!model.IsValid)
@@ -95,7 +111,7 @@ namespace EventManager.Extensions
             var model = await license.FindOneAsync(x => x.DiscordId == context.Guild.Id);
             if (model == null)
             {
-                await context.Interaction.RespondAsync("Not found.");
+                await context.Interaction.RespondAsync("License Not found.");
                 return false;
             }
             if (!model.IsValid)

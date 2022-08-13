@@ -23,16 +23,15 @@ namespace EventManager.Services
         {
             _discordSocketClient = discordSocketClient;
             _eventRepository = eventRepository;
-        }
-
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
             _timer = new System.Timers.Timer();
             _timer.Elapsed += Execute;
             _timer.Interval = 5000;
             _timer.Enabled = true;
-            _timer.Start();
+        }
 
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _timer.Start();
             return Task.CompletedTask;
         }
 
@@ -46,7 +45,7 @@ namespace EventManager.Services
         private void Execute(object source, ElapsedEventArgs e)
         {
             var lastUpdate = DateTime.Now;
-            var eventModels = _eventRepository.AsQueryable().Where(x => !x.Events.Any(x => x.IsPaused || x.IsStopped));
+            var eventModels = _eventRepository.AsQueryable().Where(x => x.Events.Any(x => !x.IsPaused && !x.IsStopped));
             foreach (var eventModel in eventModels)
             {
                 Console.WriteLine($"{eventModel.DiscordId}");

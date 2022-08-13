@@ -47,8 +47,8 @@ namespace EventManager.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await _interactionHandler.InitializeAsync();
             await _prefixHandler.InitializeAsync();
+            await _interactionHandler.InitializeAsync();
             await _discordSocketClient.LoginAsync(TokenType.Bot, _discordConfiguration.Value.Token);
             await _discordSocketClient.StartAsync();
         }

@@ -31,7 +31,6 @@ namespace EventManager.Handler
             var afterVoice = after.VoiceChannel;
 
             var guildUserModel = eventModel.Users.FirstOrDefault(x => x.UserId == user.Id);
-            if (guildUserModel == null) return;
 
             var beforeChannel = before.VoiceChannel;
             var afterChannel = after.VoiceChannel;
@@ -39,12 +38,14 @@ namespace EventManager.Handler
 
             if (disconnected)
             {
-                guildUserModel.CurrentEventId = -1;
+                if (guildUserModel != null)
+                    guildUserModel.CurrentEventId = -1;
             }
             else if (afterChannel != null)
             {
                 var eventDataModel = eventModel.Events.SingleOrDefault(x => x.VoiceChannelId == afterChannel.Id);
-                guildUserModel.CurrentEventId = eventDataModel != null ? eventDataModel.EventId : -1;
+                if (guildUserModel != null)
+                    guildUserModel.CurrentEventId = eventDataModel != null ? eventDataModel.EventId : -1;
 
             }
             await _eventRepository.ReplaceOneAsync(eventModel);

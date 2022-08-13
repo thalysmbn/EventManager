@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace EventManager.Modules
 {
+    [Name("Wallet")]
     public class EventWalletCommandModule : ModuleBase<SocketCommandContext>
     {
         private readonly IMongoRepository<LicenseModel> _licenseModel;
@@ -26,8 +27,26 @@ namespace EventManager.Modules
         [Command("balance")]
         public async Task Balance()
         {
-            var license = _licenseModel.FindOneAsync(x => x.DiscordId != Context.Guild.Id);
-            await Context.Message.ReplyAsync("Pong!");
+            if (await _licenseModel.CheckLicense(Context))
+            {
+                var guild = Context.Guild;
+                if (guild == null) return;
+
+                var eventModel = await _eventModel.FindOneAsync(x => x.DiscordId == guild.Id);
+                if (eventModel == null) return;
+
+                if (Context.Channel.Id != eventModel.WalletChannelId) return;
+
+                var userBalance = eventModel.Users.FirstOrDefault(x => x.UserId == Context.User.Id);
+                if (userBalance == null)
+                {
+                    await Context.Message.ReplyAsync("Your account has no balance");
+                }
+                else
+                {
+                    await Context.Message.ReplyAsync($"Balance: **{string.Format("{0:#,##0}", userBalance.Amount)}**");
+                }
+            }
         }
     }
 }

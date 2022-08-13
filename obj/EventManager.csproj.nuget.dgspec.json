@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\repos\\AlbionBOTs\\EventManager\\EventManager\\EventManager.csproj": {}
+    "D:\\Git\\EventManager\\EventManager.csproj": {}
   },
   "projects": {
-    "D:\\repos\\AlbionBOTs\\EventManager\\EventManager\\EventManager.csproj": {
+    "D:\\Git\\EventManager\\EventManager.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\repos\\AlbionBOTs\\EventManager\\EventManager\\EventManager.csproj",
+        "projectUniqueName": "D:\\Git\\EventManager\\EventManager.csproj",
         "projectName": "EventManager",
-        "projectPath": "D:\\repos\\AlbionBOTs\\EventManager\\EventManager\\EventManager.csproj",
+        "projectPath": "D:\\Git\\EventManager\\EventManager.csproj",
         "packagesPath": "C:\\Users\\thaly\\.nuget\\packages\\",
-        "outputPath": "D:\\repos\\AlbionBOTs\\EventManager\\EventManager\\obj\\",
+        "outputPath": "D:\\Git\\EventManager\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\thaly\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -63,6 +63,14 @@
             "Discord.Net.Webhook": {
               "target": "Package",
               "version": "[3.7.2, )"
+            },
+            "Humanizer": {
+              "target": "Package",
+              "version": "[2.14.1, )"
+            },
+            "Humanizer.Core": {
+              "target": "Package",
+              "version": "[2.14.1, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",

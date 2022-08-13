@@ -1,6 +1,8 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using EventManager.Configurations;
+using EventManager.Database;
+using EventManager.Models;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -32,8 +34,8 @@ namespace EventManager.Handler
 
         public async Task InitializeAsync()
         {
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             _client.MessageReceived += HandleCommandAsync;
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
         private async Task HandleCommandAsync(SocketMessage messageParam)
@@ -59,7 +61,7 @@ namespace EventManager.Handler
             await _commands.ExecuteAsync(
                 context: context,
                 argPos: argPos,
-                services: null);
+                services: _services);
         }
     }
 }

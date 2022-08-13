@@ -13,6 +13,7 @@ using Discord.Interactions;
 using EventManager.Handler;
 using Discord.Commands;
 using EventManager.Database;
+using EventManager.Modules;
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(app =>
@@ -35,19 +36,19 @@ await Host.CreateDefaultBuilder(args)
         });
 
         serviceProvider
-            .AddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>))
             .AddSingleton(discord)
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-            .AddSingleton<InteractionHandler>()
-            .AddSingleton<PrefixHandler>()
-            .AddSingleton<ButtonExecutedHandler>()
-            .AddSingleton<ModalSubmittedHandler>()
-            .AddSingleton<UserVoiceStateUpdatedHandler>()
             .AddSingleton(x => new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Debug,
                 DefaultRunMode = Discord.Commands.RunMode.Async
             }))
+            .AddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>))
+            .AddSingleton<InteractionHandler>()
+            .AddSingleton<PrefixHandler>()
+            .AddSingleton<ButtonExecutedHandler>()
+            .AddSingleton<ModalSubmittedHandler>()
+            .AddSingleton<UserVoiceStateUpdatedHandler>()
             .AddHostedService<UserActivity>()
             .AddHostedService<DiscordBOT>();
 

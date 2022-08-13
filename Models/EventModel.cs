@@ -52,11 +52,8 @@ namespace EventManager.Models
         [BsonElement("currentEventId")]
         public long CurrentEventId { get; set; }
 
-        [BsonElement("currentVoiceChannelId")]
-        public ulong CurrentVoiceChannelId { get; set; }
-
         [BsonElement("amount")]
-        public int Amount { get; set; }
+        public long Amount { get; set; }
     }
 
     public class Event
