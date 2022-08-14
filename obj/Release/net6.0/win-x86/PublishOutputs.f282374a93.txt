@@ -1,0 +1,11 @@
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\EventManager.pdb
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\libzstd.dll
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\snappy32.dll
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\snappy64.dll
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\libsnappy64.so
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\libzstd.so
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\libsnappy64.dylib
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\libzstd.dylib
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\appsettings.json
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\mongocrypt.dll
+D:\Git\EventManager\bin\Release\net6.0\publish\win-x86\EventManager.exe

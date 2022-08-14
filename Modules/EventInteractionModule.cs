@@ -31,78 +31,85 @@ namespace EventManager.Modules
         [SlashCommand("build", "Build Event System")]
         public async Task Build()
         {
-            var guild = Context.Guild;
-            var _user = guild.GetUser(Context.User.Id);
-            if (_user == null) return;
-
-            if (!_user.Roles.Any(x => x.Name == "Manager")) return;
-
-            var eventModel = await _eventModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
-            if (eventModel == null)
+            try
             {
-                var categoryChannel = await guild.CreateCategoryChannelAsync("Event Manager");
+                var guild = Context.Guild;
 
-                var categoryVoiceChannel = await guild.CreateCategoryChannelAsync("Event Voice");
-                var queueVoiceChannel = await guild.CreateVoiceChannelAsync("Queue Event", x => x.CategoryId = categoryVoiceChannel.Id);
+                var _user = guild.GetUser(Context.User.Id);
 
-                var managerChannel = await guild.CreateTextChannelAsync("manager", x => x.CategoryId = categoryChannel.Id);
-                var eventChannel = await guild.CreateTextChannelAsync("events", x => x.CategoryId = categoryChannel.Id);
-                var walletChannel = await guild.CreateTextChannelAsync("wallet", x => x.CategoryId = categoryChannel.Id);
-                var logChannel = await guild.CreateTextChannelAsync("logs", x => x.CategoryId = categoryChannel.Id);
+                if (_user == null) return;
 
-                await _eventModel.InsertOneAsync(new EventModel
-                {
-                    DiscordId = Context.Guild.Id,
-                    CategoryId = categoryChannel.Id,
-                    CategoryVoiceId = categoryVoiceChannel.Id,
-                    QueueVoiceId = queueVoiceChannel.Id,
-                    ManagerChannelId = managerChannel.Id,
-                    EventChannelId = eventChannel.Id,
-                    WalletChannelId = walletChannel.Id,
-                    LogChannelId = logChannel.Id,
-                    Events = new List<Event>(),
-                    Users = new List<GuildUser>()
-                });
-
-                await RespondAsync("Event Manager builded.");
-            }
-            else
-            {
-                if (!guild.CategoryChannels.Any(x => x.Id == eventModel.CategoryId))
+                var eventModel = await _eventModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
+                if (eventModel == null)
                 {
                     var categoryChannel = await guild.CreateCategoryChannelAsync("Event Manager");
-                    eventModel.CategoryId = categoryChannel.Id;
-                }
-                if (!guild.CategoryChannels.Any(x => x.Id == eventModel.CategoryVoiceId))
-                {
-                    var categoryChannel = await guild.CreateCategoryChannelAsync("Event Voice");
-                    var queueVoiceChannel = await guild.CreateVoiceChannelAsync("Queue Event", x => x.CategoryId = categoryChannel.Id);
-                    eventModel.CategoryVoiceId = categoryChannel.Id;
-                    eventModel.QueueVoiceId = queueVoiceChannel.Id;
-                }
-                if (!guild.Channels.Any(x => x.Id == eventModel.ManagerChannelId))
-                {
-                    var managerChannel = await guild.CreateTextChannelAsync("manager", x => x.CategoryId = eventModel.CategoryId);
-                    eventModel.ManagerChannelId = managerChannel.Id;
-                }
-                if (!guild.Channels.Any(x => x.Id == eventModel.EventChannelId))
-                {
-                    var eventChannel = await guild.CreateTextChannelAsync("events", x => x.CategoryId = eventModel.CategoryId);
-                    eventModel.EventChannelId = eventChannel.Id;
-                }
-                if (!guild.Channels.Any(x => x.Id == eventModel.WalletChannelId))
-                {
-                    var walletChannel = await guild.CreateTextChannelAsync("wallet", x => x.CategoryId = eventModel.CategoryId);
-                    eventModel.WalletChannelId = walletChannel.Id;
-                }
-                if (!guild.Channels.Any(x => x.Id == eventModel.WalletChannelId))
-                {
-                    var logChannel = await guild.CreateTextChannelAsync("logs", x => x.CategoryId = eventModel.CategoryId);
-                    eventModel.LogChannelId = logChannel.Id;
-                }
-                await _eventModel.ReplaceOneAsync(eventModel);
 
-                await RespondAsync("Event Manager sync.");
+                    var categoryVoiceChannel = await guild.CreateCategoryChannelAsync("Event Voice");
+                    var queueVoiceChannel = await guild.CreateVoiceChannelAsync("Queue Event", x => x.CategoryId = categoryVoiceChannel.Id);
+
+                    var managerChannel = await guild.CreateTextChannelAsync("manager", x => x.CategoryId = categoryChannel.Id);
+                    var eventChannel = await guild.CreateTextChannelAsync("events", x => x.CategoryId = categoryChannel.Id);
+                    var walletChannel = await guild.CreateTextChannelAsync("wallet", x => x.CategoryId = categoryChannel.Id);
+                    var logChannel = await guild.CreateTextChannelAsync("logs", x => x.CategoryId = categoryChannel.Id);
+
+                    await _eventModel.InsertOneAsync(new EventModel
+                    {
+                        DiscordId = Context.Guild.Id,
+                        CategoryId = categoryChannel.Id,
+                        CategoryVoiceId = categoryVoiceChannel.Id,
+                        QueueVoiceId = queueVoiceChannel.Id,
+                        ManagerChannelId = managerChannel.Id,
+                        EventChannelId = eventChannel.Id,
+                        WalletChannelId = walletChannel.Id,
+                        LogChannelId = logChannel.Id,
+                        Events = new List<Event>(),
+                        Users = new List<GuildUser>()
+                    });
+
+                    await RespondAsync("Event Manager builded.");
+                }
+                else
+                {
+                    if (!_user.Roles.Any(x => x.Name == "Manager")) return;
+                    if (!guild.CategoryChannels.Any(x => x.Id == eventModel.CategoryId))
+                    {
+                        var categoryChannel = await guild.CreateCategoryChannelAsync("Event Manager");
+                        eventModel.CategoryId = categoryChannel.Id;
+                    }
+                    if (!guild.CategoryChannels.Any(x => x.Id == eventModel.CategoryVoiceId))
+                    {
+                        var categoryChannel = await guild.CreateCategoryChannelAsync("Event Voice");
+                        var queueVoiceChannel = await guild.CreateVoiceChannelAsync("Queue Event", x => x.CategoryId = categoryChannel.Id);
+                        eventModel.CategoryVoiceId = categoryChannel.Id;
+                        eventModel.QueueVoiceId = queueVoiceChannel.Id;
+                    }
+                    if (!guild.Channels.Any(x => x.Id == eventModel.ManagerChannelId))
+                    {
+                        var managerChannel = await guild.CreateTextChannelAsync("manager", x => x.CategoryId = eventModel.CategoryId);
+                        eventModel.ManagerChannelId = managerChannel.Id;
+                    }
+                    if (!guild.Channels.Any(x => x.Id == eventModel.EventChannelId))
+                    {
+                        var eventChannel = await guild.CreateTextChannelAsync("events", x => x.CategoryId = eventModel.CategoryId);
+                        eventModel.EventChannelId = eventChannel.Id;
+                    }
+                    if (!guild.Channels.Any(x => x.Id == eventModel.WalletChannelId))
+                    {
+                        var walletChannel = await guild.CreateTextChannelAsync("wallet", x => x.CategoryId = eventModel.CategoryId);
+                        eventModel.WalletChannelId = walletChannel.Id;
+                    }
+                    if (!guild.Channels.Any(x => x.Id == eventModel.WalletChannelId))
+                    {
+                        var logChannel = await guild.CreateTextChannelAsync("logs", x => x.CategoryId = eventModel.CategoryId);
+                        eventModel.LogChannelId = logChannel.Id;
+                    }
+                    await _eventModel.ReplaceOneAsync(eventModel);
+
+                    await RespondAsync("Event Manager sync.");
+                }
+            } catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
             }
         }
 

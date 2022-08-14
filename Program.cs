@@ -29,7 +29,6 @@ await Host.CreateDefaultBuilder(args)
         
         var discord = new DiscordSocketClient(new DiscordSocketConfig
         {
-            GatewayIntents = GatewayIntents.All,
             LogGatewayIntentWarnings = false,
             AlwaysDownloadUsers = true,
             LogLevel = LogSeverity.Debug,

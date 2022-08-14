@@ -58,8 +58,8 @@ namespace EventManager.Modules
 
             var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
             var discord = await _licenseModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
-            if (discord != null) await RespondAsync($"**{Languages.Language["en"].License}:** {discord.Id}\n**{language.Expire}:** {discord.ExpireAt}");
-            if (discord == null) await RespondAsync($"License not found.");
+            if (discord != null) await RespondAsync($"**{language.License}:** {discord.Id}\n**{language.Expire}:** {discord.ExpireAt}");
+            if (discord == null) await RespondAsync($"{language.LicenseNotFound};");
         }
     }
 }

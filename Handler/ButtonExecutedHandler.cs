@@ -239,7 +239,7 @@ namespace EventManager.Handler
                             embed.AddField($"{language.BuyerTax}:", string.Format("{0:#,##0}", buyerTax), true);
 
                             var stringBuilder = new StringBuilder();
-                            stringBuilder.AppendLine("Details:");
+                            stringBuilder.AppendLine($"{language.Users}:");
 
                             var distribution = total / users.Count;
 
