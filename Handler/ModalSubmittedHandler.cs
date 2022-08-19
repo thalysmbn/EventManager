@@ -81,7 +81,11 @@ namespace EventManager.Handler
                         break;
                 }
 
-                await modal.UpdateAsync(x => x.Embed = new EmbedBuilder().CreateEventBuild(language, eventDataModel));
+                await modal.UpdateAsync(x =>
+                {
+                    x.Embed = new EmbedBuilder().CreateEventBuild(language, eventDataModel);
+                    x.Components = new ComponentBuilder().CreateEventComponentBuilder(language, eventDataModel);
+                });
 
                 if (eventDataModel.MessageId != 0)
                     await eventChannel.ModifyMessageAsync(eventDataModel.MessageId, x =>

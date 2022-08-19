@@ -70,7 +70,7 @@ namespace EventManager.Extensions
                     .WithButton($"{language.EventTax}", $"eventTax#{eventDataModel.EventId}", ButtonStyle.Secondary, new Emoji("💵"), disabled: eventDataModel.IsStopped)
                     .WithButton($"{language.Amount}", $"amount#{eventDataModel.EventId}", ButtonStyle.Secondary, new Emoji("💰"), disabled: eventDataModel.IsStopped)
                     .WithButton($"{language.Users}", $"users#{eventDataModel.EventId}", ButtonStyle.Secondary, new Emoji("🔖"))
-                    .WithButton($"{language.StopEvent}", $"stop#{eventDataModel.EventId}", ButtonStyle.Danger, disabled: eventDataModel.IsStopped);
+                    .WithButton($"{language.StopEvent}", $"stop#{eventDataModel.EventId}", ButtonStyle.Danger, disabled: eventDataModel.IsStopped || eventDataModel.Amount == 0);
             return component.Build();
         }
 

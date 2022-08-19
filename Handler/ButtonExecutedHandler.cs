@@ -95,13 +95,13 @@ namespace EventManager.Handler
                             if (!user.Roles.Any(x => x.Name == "Manager")) return;
                             if (component.Channel.Id != eventModel.ManagerChannelId) return;
 
-                            var embeds = new LinkedList<Embed>();
                             await Task.Run(async () =>
                             {
                                 switch (command)
                                 {
                                     case "stop":
                                         if (eventDataModel.IsStopped) break;
+                                        if (eventDataModel.Amount == 0) return;
 
                                         var channel = guild.GetVoiceChannel(eventDataModel.VoiceChannelId);
                                         if (channel != null) await channel.DeleteAsync();
@@ -167,10 +167,9 @@ namespace EventManager.Handler
                                         break;
 
                                 }
-                                embeds.AddFirst(new EmbedBuilder().CreateEventBuild(language, eventDataModel));
                                 await component.UpdateAsync(x =>
                                 {
-                                    x.Embeds = embeds.ToArray();
+                                    x.Embed = new EmbedBuilder().CreateEventBuild(language, eventDataModel);
                                     x.Components = new ComponentBuilder().CreateEventComponentBuilder(language, eventDataModel);
                                 });
                             }).ContinueWith(async x =>
@@ -271,7 +270,6 @@ namespace EventManager.Handler
                                 stringBuilder.Append($" ( {_user.Percentage}% ) ");
                                 stringBuilder.AppendLine();
                             }
-
                             await component.RespondAsync(stringBuilder.ToString(),
                             embed: embed.Build()
                         );

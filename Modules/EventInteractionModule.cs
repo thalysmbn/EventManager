@@ -113,6 +113,7 @@ namespace EventManager.Modules
             }
         }
 
+        //[RequireRole("Manager")]
         [SlashCommand("create", "Create Event")]
         public async Task Create(int eventTax, int buyerTax)
         {

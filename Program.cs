@@ -31,12 +31,19 @@ await Host.CreateDefaultBuilder(args)
         {
             LogGatewayIntentWarnings = false,
             AlwaysDownloadUsers = true,
+            MessageCacheSize = 100,
+            GatewayIntents =
+            GatewayIntents.Guilds |
+            GatewayIntents.GuildMembers |
+            GatewayIntents.GuildMessageReactions |
+            GatewayIntents.GuildMessages |
+            GatewayIntents.GuildVoiceStates,
             LogLevel = LogSeverity.Debug,
-        });
+        });;
 
         serviceProvider
             .AddSingleton(discord)
-            .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+            .AddSingleton(x => new InteractionService(discord))
             .AddSingleton(x => new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Debug,
