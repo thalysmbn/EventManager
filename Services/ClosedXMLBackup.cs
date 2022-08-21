@@ -33,7 +33,8 @@ namespace EventManager.Services
                 if (_discord == null) continue;
 
                 using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Sample Sheet");
+
+                var worksheetData = workbook.Worksheets.Add("Data");
 
                 var settings = new Dictionary<string, object>();
                 settings.Add("Discord ID", discord.DiscordId);
@@ -46,45 +47,58 @@ namespace EventManager.Services
                 settings.Add("Logs Channel ID", discord.LogChannelId);
                 settings.Add("Last Event ID", discord.LastEventId);
 
-                worksheet.Cell($"A1").Value = "Settings";
-                worksheet.Cell($"A1").Style.Font.SetBold();
-                worksheet.Cell($"A1").Style.Fill.SetBackgroundColor(XLColor.Gray);
-                worksheet.Cell($"B1").Style.Fill.SetBackgroundColor(XLColor.Gray);
+                worksheetData.Cell($"A1").Value = "Settings";
+                worksheetData.Cell($"A1").Style.Font.SetBold();
+                worksheetData.Cell($"A1").Style.Fill.SetBackgroundColor(XLColor.Gray);
+                worksheetData.Cell($"B1").Style.Fill.SetBackgroundColor(XLColor.Gray);
+                worksheetData.Cell($"A1").WorksheetColumn().Width = 15;
+                worksheetData.Cell($"B1").WorksheetColumn().Width = 30;
 
                 foreach (var setting in settings.Select((value, index) => new { value, index }))
                 {
-                    worksheet.Cell($"A{setting.index + 2}").Value = setting.value.Key;
-                    worksheet.Cell($"B{setting.index + 2}").Value = setting.value.Value;
-                    worksheet.Cell($"A{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.Gray);
-                    worksheet.Cell($"B{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.Gray);
+                    worksheetData.Cell($"A{setting.index + 2}").Value = setting.value.Key;
+                    worksheetData.Cell($"B{setting.index + 2}").Value = string.Format("{0:#,##0}", setting.value.Value);
+                    worksheetData.Cell($"A{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.Gray);
+                    worksheetData.Cell($"B{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.Gray);
+                    worksheetData.Cell($"B{setting.index + 2}").Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
                 }
 
                 var users = discord.Users.OrderByDescending(x => x.Amount);
                 var usersCount = users.Count();
 
-                worksheet.Cell($"D1").Value = "Users";
-                worksheet.Cell($"F1").Value = usersCount;
-                worksheet.Cell($"D1").Style.Font.SetBold();
-                worksheet.Cell($"D1").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
-                worksheet.Cell($"E1").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
-                worksheet.Cell($"F1").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"D1").Value = "Users";
+                worksheetData.Cell($"F1").Value = usersCount;
+                worksheetData.Cell($"D1").Style.Font.SetBold();
+                worksheetData.Cell($"F1").Style.Font.SetBold();
+                worksheetData.Cell($"D1").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"E1").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"F1").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"D1").WorksheetColumn().Width = 15;
+                worksheetData.Cell($"E1").WorksheetColumn().Width = 15;
+                worksheetData.Cell($"F1").WorksheetColumn().Width = 15;
 
                 foreach (var setting in users.Select((value, index) => new { value, index }))
                 {
                     var user = _discord.GetUser(setting.value.UserId);
-                    worksheet.Cell($"D{setting.index + 2}").Value = setting.value.UserId;
-                    worksheet.Cell($"E{setting.index + 2}").Value = user == null ? "" : user.Username;
-                    worksheet.Cell($"F{setting.index + 2}").Value = string.Format("{0:#,##0}", setting.value.Amount);
-                    worksheet.Cell($"D{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
-                    worksheet.Cell($"E{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
-                    worksheet.Cell($"F{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                    worksheetData.Cell($"D{setting.index + 2}").Value = string.Format("{0:#,##0}", setting.value.UserId);
+                    worksheetData.Cell($"E{setting.index + 2}").Value = user == null ? "" : user.Nickname == null ? user.Username : user.Nickname;
+                    worksheetData.Cell($"F{setting.index + 2}").Value = string.Format("{0:#,##0}", setting.value.Amount);
+                    worksheetData.Cell($"E{setting.index + 2}").Style.Font.SetBold();
+                    worksheetData.Cell($"D{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                    worksheetData.Cell($"E{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                    worksheetData.Cell($"F{setting.index + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                    worksheetData.Cell($"D{setting.index + 2}").Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+                    worksheetData.Cell($"F{setting.index + 2}").Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+                    worksheetData.Cell($"D{setting.index + 2}").WorksheetColumn().Width = 30;
                 }
-                worksheet.Cell($"D{usersCount + 2}").Value = "Total";
-                worksheet.Cell($"D{usersCount + 2}").Style.Font.SetBold();
-                worksheet.Cell($"F{usersCount + 2}").Value = string.Format("{0:#,##0}", users.Sum(x => x.Amount));
-                worksheet.Cell($"D{usersCount + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
-                worksheet.Cell($"E{usersCount + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
-                worksheet.Cell($"F{usersCount + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"D{usersCount + 2}").Value = "Total";
+                worksheetData.Cell($"D{usersCount + 2}").Style.Font.SetBold();
+                worksheetData.Cell($"F{usersCount + 2}").Style.Font.SetBold();
+                worksheetData.Cell($"F{usersCount + 2}").Value = string.Format("{0:#,##0}", users.Sum(x => x.Amount));
+                worksheetData.Cell($"D{usersCount + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"E{usersCount + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"F{usersCount + 2}").Style.Fill.SetBackgroundColor(XLColor.GreenPigment);
+                worksheetData.Cell($"F{usersCount + 2}").Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
                 workbook.SaveAs($"data\\{discord.DiscordId} - {_discord.Name}.xlsx");
             }
