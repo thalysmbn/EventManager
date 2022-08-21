@@ -1,12 +1,15 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using EventManager.Database;
 using EventManager.Extensions;
 using EventManager.Models;
 using EventManager.Resources;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,14 +54,16 @@ namespace EventManager.Modules
         [SlashCommand("license", "Check license")]
         public async Task License()
         {
-            var _user = Context.Guild.GetUser(Context.User.Id);
+            var _user = Context.User as SocketGuildUser;
             if (_user == null) return;
 
             if (!_user.Roles.Any(x => x.Name == "Manager")) return;
 
             var language = await _regionRepository.GetOrAddLanguageByRegion(Context.Guild.Id);
             var discord = await _licenseModel.FindOneAsync(x => x.DiscordId == Context.Guild.Id);
-            if (discord != null) await RespondAsync($"**{language.License}:** {discord.Id}\n**{language.Expire}:** {discord.ExpireAt}");
+            var culture = new CultureInfo(language.Culture);
+            var expireDate = discord.ExpireAt - DateTime.Now;
+            if (discord != null) await RespondAsync($"**{language.License}:** {discord.Id}\n**{language.Expire}:** {expireDate.Humanize(culture: culture)}");
             if (discord == null) await RespondAsync($"{language.LicenseNotFound};");
         }
     }

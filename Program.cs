@@ -56,7 +56,8 @@ await Host.CreateDefaultBuilder(args)
             .AddSingleton<ModalSubmittedHandler>()
             .AddSingleton<UserVoiceStateUpdatedHandler>()
             .AddHostedService<UserActivity>()
-            .AddHostedService<DiscordBOT>();
+            .AddHostedService<DiscordBOT>()
+            .AddHostedService<ClosedXMLBackup>();
 
         var service = serviceProvider.BuildServiceProvider();
         var logger = service.GetService<ILogger<Program>>();

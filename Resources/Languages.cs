@@ -13,6 +13,7 @@ namespace EventManager.Resources
             {
                 "en", new LanguageData
                 {
+                    Culture = "en",
                     StartOrPauseEvent = "Start/Pause Event",
                     StopEvent = "Stop Event",
                     Join = "Join",
@@ -42,6 +43,7 @@ namespace EventManager.Resources
             {
                 "pt", new LanguageData
                 {
+                    Culture = "pt",
                     StartOrPauseEvent = "Iniciar/Pausar Evento",
                     StopEvent = "Parar Evento",
                     Join = "Entrar",
@@ -74,6 +76,7 @@ namespace EventManager.Resources
 
     public class LanguageData
     {
+        public string Culture { get; set; }
         public string StartOrPauseEvent { get; set; }
         public string StopEvent { get; set; }
         public string Join { get; set; }
